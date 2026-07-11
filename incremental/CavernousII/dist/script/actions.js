@@ -319,14 +319,21 @@ function completeCrossLava(loc, clone, action) {
     loc.entered = Infinity;
     return false;
 }
+// Fork note (simple mode): combat intake needs NO boost correction — measured
+// 2026-07-11 (exp-combat-parity, E=2..4). In N-clone play each co-attacking
+// clone's fight tick spreads its own damage over the N co-located bodies, so
+// per-body intake is (creatureAtk - Defense) per game-second REGARDLESS of
+// party size; a boosted single body under vanilla intake takes exactly a party
+// member's damage (intake is per game-second, unaffected by attack speed).
+// With the gear slices at E, per-body survivability matches automatically.
+// (An earlier /E^2 correction from a flawed derivation made the boosted body
+// E^2 x too tanky.)
 function tickFight(usedTime, loc, baseTime, clone) {
     if (!loc.creature)
         throw new Error("No creature to fight");
-    // Fork: undo the boost's time dilation on the intake side — the boosted
-    // body experiences boostFactor() x attack-time per game-second.
-    let damage = (Math.max(loc.creature.attack - getStat("Defense").current, 0) * (baseTime / boostFactor())) / 1000;
+    let damage = (Math.max(loc.creature.attack - getStat("Defense").current, 0) * baseTime) / 1000;
     if (loc.creature.defense >= getStat("Attack").current && loc.creature.attack <= getStat("Defense").current) {
-        damage = (baseTime / boostFactor()) / 1000;
+        damage = baseTime / 1000;
     }
     clone.inCombat = true;
     spreadDamage(damage, clone);
@@ -334,9 +341,7 @@ function tickFight(usedTime, loc, baseTime, clone) {
 function spreadDamage(damage, clone) {
     const targetClones = clones.filter(c => c.x == clone.x && c.y == clone.y && c.damage < Infinity);
     targetClones.forEach(c => {
-        // Fork: each body on the tile stands in for boostFactor() bodies when
-        // incoming damage is split across the party.
-        c.takeDamage(damage / (targetClones.length * boostFactor()));
+        c.takeDamage(damage / targetClones.length);
     });
 }
 let combatTools = [
