@@ -1,0 +1,24 @@
+# Headless sim test suite (incremental/CavernousII/test/ — jsdom, controlled
+# clock, no browser). Runs on the fork's integration branches; upstream's
+# Pages deploy is untouched.
+name: Tests
+
+on:
+  push:
+    branches: ["substrate", "substrate-*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: incremental/CavernousII
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm test
