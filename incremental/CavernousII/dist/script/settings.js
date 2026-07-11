@@ -160,6 +160,36 @@ function loadSettings(savedSettings) {
         setMinimumStatGain(minStatGainInput);
     Object.assign(settings, savedSettings, settings);
 }
+/************ Fork (Archipelago substrate): simple mode ************/
+// In simple mode the Core-realm Strange Machine grants a "boost" instead of a
+// new clone: one body does the work of E = clones.length + boostCount bodies
+// for the same mana. Byte-inert at defaults: with boostCount == 0 every
+// consuming site multiplies/divides by exactly 1 (exact float identity), and
+// the save gains no fields (see cloneData in main.ts).
+//
+// effectiveCloneCount() is the ONE definition of E; every consuming site
+// (machine cost curve, action speed, XP, gear caps, combat stat slices,
+// combat intake) derives from it — do not restate the formula elsewhere.
+let simpleMode = false;
+let boostCount = 0;
+function effectiveCloneCount() {
+    return clones.length + boostCount;
+}
+// Per-body work dilation: each real body does E / clones.length bodies' work.
+// (In pure simple mode clones.length stays 1, so this is just E.)
+function boostFactor() {
+    return boostCount ? effectiveCloneCount() / clones.length : 1;
+}
+function updateSimpleModeDisplay() {
+    const el = document.querySelector("#simple-mode-toggle");
+    if (el)
+        el.innerHTML = simpleMode ? "Machines grant boosts" : "Machines grant clones";
+}
+function toggleSimpleMode() {
+    simpleMode = !simpleMode;
+    updateSimpleModeDisplay();
+    return simpleMode;
+}
 const configBox = document.querySelector("#config-box") ??
     (() => {
         throw new Error("No config box found");

@@ -130,7 +130,16 @@ function convertMapToVerdant(map, zoneNumber) {
 const realms = [];
 realms.push(
 // Default realm, no special effects.
-new Realm("Core Realm", "Where you started.  Hopefully, how you'll leave this cave complex.", () => clones.length, () => Clone.addNewClone()));
+new Realm("Core Realm", "Where you started.  Hopefully, how you'll leave this cave complex.", 
+// Fork: E keeps the 5*2^(n-1) machine cost curve counting boosts too.
+() => effectiveCloneCount(), () => {
+    if (simpleMode) {
+        boostCount++;
+    }
+    else {
+        Clone.addNewClone();
+    }
+}));
 realms.push(
 // Double mana cost on everything.
 // All stuff costs except for making bars and vaporizing gold is doubled.

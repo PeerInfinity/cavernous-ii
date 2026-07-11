@@ -88,7 +88,10 @@ class Action<actionName extends anyActionName = anyActionName> {
 
 	tick(usedTime: number, loc: MapLocation, baseTime: number = 0, clone: Clone) {
 		for (let i = 0; i < this.stats.length; i++) {
-			this.stats[i][0].gainSkill((baseTime / 1000) * this.stats[i][1]);
+			// Fork: XP accrues per game-second; the boosted body does
+			// boostFactor() bodies' work per game-second, so scale to match
+			// what that many normal clones would bank.
+			this.stats[i][0].gainSkill((baseTime / 1000) * this.stats[i][1] * boostFactor());
 		}
 		if (this.tickExtra) {
 			this.tickExtra(usedTime, loc, baseTime, clone);
@@ -149,7 +152,9 @@ class Action<actionName extends anyActionName = anyActionName> {
 		for (let i = 0; i < this.stats.length; i++) {
 			mult *= Math.pow(this.stats[i][0].value, this.stats[i][1]);
 		}
-		return mult;
+		// Fork: the single choke point for boost speed — action ticks,
+		// expectedLeft boundary math, and projections all route through here.
+		return mult / boostFactor();
 	}
 }
 
@@ -304,7 +309,8 @@ function simpleRequire(requirement: [anyStuffName, number][], doubleExcempt = fa
 function canMakeEquip(requirement: [anyStuffName, number][], equipType: string) {
 	function canDo(): CanStartReturnCode {
 		const itemCount = stuff.reduce((a, c) => a + (c.name.includes(equipType) ? c.count : 0), 0);
-		if (itemCount >= clones.length) return CanStartReturnCode.Never;
+		// Fork: one boosted body wears/carries the effective party's gear.
+		if (itemCount >= effectiveCloneCount()) return CanStartReturnCode.Never;
 		const haveStuff = simpleRequire(requirement)();
 		if (haveStuff == CanStartReturnCode.NotNow) return CanStartReturnCode.NotNow;
 		return CanStartReturnCode.Now;
@@ -353,9 +359,11 @@ function completeCrossLava(loc: MapLocation, clone: Clone, action: ActionInstanc
 
 function tickFight(usedTime: number, loc: MapLocation, baseTime: number, clone: Clone) {
 	if (!loc.creature) throw new Error("No creature to fight");
-	let damage = (Math.max(loc.creature.attack - getStat("Defense").current, 0) * baseTime) / 1000;
+	// Fork: undo the boost's time dilation on the intake side — the boosted
+	// body experiences boostFactor() x attack-time per game-second.
+	let damage = (Math.max(loc.creature.attack - getStat("Defense").current, 0) * (baseTime / boostFactor())) / 1000;
 	if (loc.creature.defense >= getStat("Attack").current && loc.creature.attack <= getStat("Defense").current) {
-		damage = baseTime / 1000;
+		damage = (baseTime / boostFactor()) / 1000;
 	}
 	clone.inCombat = true;
 	spreadDamage(damage, clone);
@@ -364,7 +372,9 @@ function tickFight(usedTime: number, loc: MapLocation, baseTime: number, clone: 
 function spreadDamage(damage: number, clone: Clone){
 	const targetClones = clones.filter(c => c.x == clone.x && c.y == clone.y && c.damage < Infinity);
 	targetClones.forEach(c => {
-		c.takeDamage(damage / targetClones.length);
+		// Fork: each body on the tile stands in for boostFactor() bodies when
+		// incoming damage is split across the party.
+		c.takeDamage(damage / (targetClones.length * boostFactor()));
 	});
 }
 

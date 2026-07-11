@@ -199,7 +199,7 @@ class Zone {
 					if (r.cloneHealth[i] === undefined) return h;
 					return Math.max(h + r.cloneHealth[i][1], 0) + r.cloneHealth[0][0];
 				});
-				let effectiveMana = r.mana + (Math.floor(r.stuff.find(s => s.name == "Gold Nugget")?.count || 0) * (GOLD_VALUE * getRealmMult("Verdant Realm", true) - 1 / clones.length));
+				let effectiveMana = r.mana + (Math.floor(r.stuff.find(s => s.name == "Gold Nugget")?.count || 0) * (GOLD_VALUE * getRealmMult("Verdant Realm", true) - 1 / effectiveCloneCount()));
 				let result: [ZoneRoute, ZoneRoute["require"], number[], number] = [r, r.require, health, effectiveMana];
 				return result;
 			});

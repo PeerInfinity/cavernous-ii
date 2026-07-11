@@ -95,17 +95,19 @@ function calcCombatStats() {
 	attack.push(...Array(getStuff("+1 Sword").count).fill(4));
 	attack.push(...Array(getStuff("Steel Sword").count).fill(2));
 	attack.push(...Array(getStuff("Iron Sword").count).fill(1));
-	attack = attack.slice(0, clones.length).reduce((a, c) => a + c, 0);
+	// Fork: gear stats slice to the effective party size (one boosted body
+	// wears the party's gear).
+	attack = attack.slice(0, effectiveCloneCount()).reduce((a, c) => a + c, 0);
 	let defense = [];
 	defense.push(...Array(getStuff("+1 Shield").count).fill(4));
 	defense.push(...Array(getStuff("Steel Shield").count).fill(2));
 	defense.push(...Array(getStuff("Iron Shield").count).fill(1));
-	defense = defense.slice(0, clones.length).reduce((a, c) => a + c, 0);
+	defense = defense.slice(0, effectiveCloneCount()).reduce((a, c) => a + c, 0);
 	let health = [];
 	health.push(...Array(getStuff("+1 Armour").count).fill(25));
 	health.push(...Array(getStuff("Steel Armour").count).fill(15));
 	health.push(...Array(getStuff("Iron Armour").count).fill(5));
-	health = health.slice(0, clones.length).reduce((a, c) => a + c, 0);
+	health = health.slice(0, effectiveCloneCount()).reduce((a, c) => a + c, 0);
 	getStat("Attack").setStat(attack);
 	getStat("Defense").setStat(defense);
 	getStat("Health").setStat(health);

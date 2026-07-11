@@ -141,6 +141,10 @@ let save = async function save() {
     const cloneData = {
         count: clones.length,
     };
+    if (simpleMode)
+        cloneData.simpleMode = true;
+    if (boostCount)
+        cloneData.boost = boostCount;
     const time = {
         saveTime: Date.now(),
         timeBanked,
@@ -225,6 +229,9 @@ function load() {
     while (clones.length < saveGame.cloneData.count) {
         Clone.addNewClone(true);
     }
+    simpleMode = !!saveGame.cloneData.simpleMode;
+    boostCount = saveGame.cloneData.boost || 0;
+    updateSimpleModeDisplay();
     for (let i = 0; i < saveGame.zoneData.length; i++) {
         const zone = zones.find(z => z.name == saveGame.zoneData[i].name);
         if (zone === undefined)

@@ -157,8 +157,15 @@ realms.push(
 	new Realm(
 		"Core Realm",
 		"Where you started.  Hopefully, how you'll leave this cave complex.",
-		() => clones.length,
-		() => Clone.addNewClone()
+		// Fork: E keeps the 5*2^(n-1) machine cost curve counting boosts too.
+		() => effectiveCloneCount(),
+		() => {
+			if (simpleMode) {
+				boostCount++;
+			} else {
+				Clone.addNewClone();
+			}
+		}
 	));
 
 realms.push(
